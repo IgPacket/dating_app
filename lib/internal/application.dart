@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:dating_app/presentation/home.dart';
+import 'package:dating_app/presentation/screens/chats_screen.dart';
 
 class Application extends StatelessWidget {
   const Application({super.key});
@@ -11,7 +12,12 @@ class Application extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
         visualDensity: VisualDensity.adaptivePlatformDensity,
+        primaryColor: Colors.white70,
       ),
+      initialRoute: '/chats',
+      routes: {
+        '/chats': (context) => const ChatsScreen(),
+      },
       home: const Home(),
     );
   }
