@@ -12,59 +12,18 @@ class ChatsScreen extends StatefulWidget {
   State<ChatsScreen> createState() => _ChatsScreenState();
 }
 
-class _ChatsScreenState extends State<ChatsScreen> {
+class _ChatsScreenState extends State<ChatsScreen> with SingleTickerProviderStateMixin {
+
   int likes = 10;
   int _selectedIndex = 1;
+  bool showBottomSheet = false;
 
   final CollectionReference _chatCollection = FirebaseFirestore.instance.collection('chats');
-
-  // final List<ChatItem> _chatItems = [
-  //   const ChatItem(
-  //     profileImage: 'assets/images/profile_non_auth.jpg',
-  //     time: '23 ч 43 мин',
-  //     message: 'Отлично выглядишь',
-  //   ),
-  //   const ChatItem(
-  //     profileImage: 'assets/images/profile_non_auth.jpg',
-  //     time: '20 ч 40 мин',
-  //     message: 'Встретимся? Я рядом',
-  //   ),
-  //   const ChatItem(
-  //     profileImage: 'assets/images/profile_non_auth.jpg',
-  //     time: '18 ч 40 мин',
-  //     message: 'Встретимся?',
-  //   ),
-  //   const ChatItem(
-  //     profileImage: 'assets/images/profile_non_auth.jpg',
-  //     time: '09 ч 40 мин',
-  //     message: 'Давно тебя хочу',
-  //   ),
-  //   const ChatItem(
-  //     profileImage: 'assets/images/profile_non_auth.jpg',
-  //     time: '03 ч 04 мин',
-  //     message: 'Я в ванной.. Скинь фото..',
-  //   ),
-  //   const ChatItem(
-  //     profileImage: 'assets/images/profile_non_auth.jpg',
-  //     time: '01 ч 09 мин',
-  //     message: 'Привет',
-  //   ),
-  //   const ChatItem(
-  //     profileImage: 'assets/images/profile_non_auth.jpg',
-  //     time: '01 ч 09 мин',
-  //     message: 'Привет',
-  //   ),
-  //   const ChatItem(
-  //     profileImage: 'assets/images/profile_non_auth.jpg',
-  //     time: '01 ч 09 мин',
-  //     message: 'Привет',
-  //   ),
-  // ];
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: Colors.white70,
+      color: Colors.grey,
       padding: const EdgeInsets.only(top: 150),
       child: Scaffold(
         appBar: AppBar(
@@ -77,12 +36,12 @@ class _ChatsScreenState extends State<ChatsScreen> {
               fontWeight: FontWeight.bold,
             ),
           ),
-          actions: const [
+          actions: [
             Padding(
-              padding: EdgeInsets.only(right: 16.0),
+              padding: const EdgeInsets.only(right: 16.0),
               child: Row(
                 children: [
-                  Text(
+                  const Text(
                     'OFF',
                     style: TextStyle(
                       color: Colors.white,
@@ -90,86 +49,68 @@ class _ChatsScreenState extends State<ChatsScreen> {
                       fontWeight: FontWeight.bold,
                     )
                   ),
-                  SizedBox(width: 8.0,),
-                  Icon(
-                    Icons.remove_red_eye,
+                  const SizedBox(width: 8.0,),
+                  IconButton(
+                    icon: const Icon(Icons.remove_red_eye),
                     color: Colors.amber,
-                    size: 24,
+                    iconSize: 24,
+                      onPressed: () {
+                        setState(() {
+                          showBottomSheet = true; // Показать BottomSheet
+                        });
+                      },
                   ),
                 ],
               ),
             ),
           ],
         ),
-        body: Container(
-          color: Colors.black87,
-          child: StreamBuilder<QuerySnapshot>(
-            stream: _chatCollection.snapshots(),
-            builder: (context, snapshot) {
-              if (snapshot.hasError) {
-                return Text('Ошибка: ${snapshot.error}');
-              }
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Center(child: CircularProgressIndicator());
-              }
+        body:
+            Container(
+              color: Colors.black87,
+              child: StreamBuilder<QuerySnapshot>(
+                  stream: _chatCollection.snapshots(),
+                  builder: (context, snapshot) {
+                    if (snapshot.hasError) {
+                      return Text('Ошибка: ${snapshot.error}');
+                    }
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
 
-              List<ChatItem> chatItems = snapshot.data!.docs
-                .map((doc) => ChatItem.fromFirestore(doc))
-                .toList();
+                    List<ChatItem> chatItems = snapshot.data!.docs
+                        .where((doc) => !(doc.data() as Map<String, dynamic>).containsKey('likes'))
+                        .map((doc) => ChatItem.fromFirestore(doc))
+                        .toList();
 
-              return ListView.builder(
-                itemCount: chatItems.length,
-                itemBuilder: (context, index) {
-                  return ChatItemWidget(chatItem: chatItems[index]);
-                },
-              );
-            }
-          ),
+                    return ListView.builder(
+                      itemCount: chatItems.length,
+                      itemBuilder: (context, index) {
+                        return GestureDetector(
+                          onTap: () {
+                            if (!chatItems[index].time.contains('Вас')) {
+                              Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) =>
+                                          ChatScreen(
+                                              chatItem: chatItems[index]
+                                          )
+                                  )
+                              );
+                            }
+                          },
+                          child: ChatItemWidget(
+                              chatItem: chatItems[index]
+                          ),
+                        );
+                      },
+                    );
+                  }
+              ),
         ),
 
-      // body: Container(
-      //   color: Colors.black87,
-      //   child: Padding(
-      //     padding: const EdgeInsets.all(16.0),
-      //     child: Column(
-      //       crossAxisAlignment: CrossAxisAlignment.start,
-      //       children: [
-      //         Row(
-      //           children: [
-      //             const CircleAvatar(
-      //               backgroundColor: Colors.purple,
-      //               child: Icon(
-      //                 Icons.favorite,
-      //                 color: Colors.white,
-      //                 size: 24,
-      //               ),
-      //             ),
-      //             const SizedBox(width: 16.0,),
-      //             Text(
-      //               '$likes человека тебя лайкнули',
-      //               style: const TextStyle(
-      //                 color: Colors.white,
-      //                 fontSize: 16,
-      //                 fontWeight: FontWeight.bold,
-      //               ),
-      //             )
-      //           ],
-      //         ),
-      //          const SizedBox(height: 16.0),
-      //         Expanded(
-      //             child: ListView.builder(
-      //               itemCount: _chatItems.length,
-      //               itemBuilder: (context, index) {
-      //                 return ChatItemWidget(
-      //                   chatItem: _chatItems[index]
-      //                 );
-      //               }
-      //             )
-      //         )
-      //       ],
-      //     )
-      //   ),
-      // ),
+
       bottomNavigationBar: BottomNavigationBar(
           backgroundColor: Colors.black,
           selectedItemColor: Colors.yellow,
@@ -212,7 +153,185 @@ class _ChatsScreenState extends State<ChatsScreen> {
             )
           ]
         ),
+        bottomSheet: showBottomSheet
+          ? Container(
+          height: 400, // Высота BottomSheet
+          decoration: const BoxDecoration(
+            color: Colors.black,
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(20),
+              topRight: Radius.circular(20),
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(top: 24, left: 24, right: 24),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Expanded(child: SizedBox()),
+                      Image.asset(
+                        'assets/images/glasses.png', // Замените на путь к вашему изображению
+                        height: 50,
+                      ),
+                    Expanded(child: SizedBox()),
+                    IconButton(
+                      onPressed: () {
+                        setState(() {
+                          showBottomSheet = false; // Скрыть BottomSheet
+                        });
+                      },
+                      icon: const Icon(Icons.close),
+                    ),
+                  ],
+                ),
+              ),
+              const Padding(
+                padding: EdgeInsets.only(top: 16, left: 24, right: 24),
+                child: Text(
+                  'РЕЖИМ ИНКОГНИТО НА 24 ЧАСА',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              const Padding(
+                padding: EdgeInsets.only(top: 8, left: 24, right: 24),
+                child: Text(
+                  'Стань невидимой в ленте и чатах, скрой объявление и наслаждайся незамеченным',
+                  style: TextStyle(
+                    color: Colors.white70,
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    _buildPriceButton('1', '99 ₽', 'assets/images/glasses_small.png'),
+                    _buildPriceButton('3', '199 ₽', 'assets/images/glasses_small.png', isHit: true),
+                    _buildPriceButton('7', '399 ₽', 'assets/images/glasses_small.png', isDiscount: true),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 20),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                child: SizedBox(
+                  width: double.infinity, //  Растягиваем кнопку по ширине
+                  child: ElevatedButton(
+                    onPressed: () {},
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.pink,
+                      padding: const EdgeInsets.symmetric(vertical: 16.0),
+                      textStyle: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    child: const Text('Купить',
+                      style: TextStyle(color: Colors.white,),),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 10),
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 24.0),
+                child: Center(
+                    child: Text(
+                    'УСЛОВИЯ И ПОЛОЖЕНИЯ',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 12,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        )
+        : const SizedBox(),
       ),
     );
   }
+}
+
+Widget _buildPriceButton(String days, String price, String iconAsset,
+    {bool isHit = false, bool isDiscount = false}) {
+  return Container(
+    decoration: BoxDecoration(
+      color: Colors.black12,
+      borderRadius: BorderRadius.circular(10),
+    ),
+    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+    child: Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              days,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Image.asset(
+              iconAsset,
+              height: 24,
+            ),
+          ],
+        ),
+        const SizedBox(height: 4),
+        Text(
+          price,
+          style: const TextStyle(
+            color: Colors.white70,
+            fontSize: 14,
+          ),
+        ),
+        if (isHit)
+          Container(
+            margin: const EdgeInsets.only(top: 4),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: Colors.red,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: const Text(
+              'Хит',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 10,
+              ),
+            ),
+          ),
+        if (isDiscount)
+          Container(
+            margin: const EdgeInsets.only(top: 4),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: Colors.red,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: const Text(
+              '-42%',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 10,
+              ),
+            ),
+          ),
+      ],
+    ),
+  );
 }

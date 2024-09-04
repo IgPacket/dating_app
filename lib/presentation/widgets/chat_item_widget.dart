@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:dating_app/presentation/models/chat_item.dart';
 
-class ChatItemWidget extends StatelessWidget {
+class ChatItemWidget extends StatefulWidget {
   final ChatItem chatItem;
 
   const ChatItemWidget({
@@ -10,13 +10,18 @@ class ChatItemWidget extends StatelessWidget {
   });
 
   @override
+  State<ChatItemWidget> createState() => _ChatItemWidgetState();
+}
+
+class _ChatItemWidgetState extends State<ChatItemWidget> {
+  @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(10.0),
       child: Row(
         children: [
           CircleAvatar(
-            backgroundImage: AssetImage(chatItem.profileImage),
+            backgroundImage: AssetImage(widget.chatItem.profileImage),
             radius: 30,
           ),
           const SizedBox(width: 16.0),
@@ -25,14 +30,14 @@ class ChatItemWidget extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  chatItem.time,
+                  widget.chatItem.time,
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 16,
                   ),
                 ),
                 Text(
-                  chatItem.message,
+                  widget.chatItem.message,
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 16,
@@ -41,11 +46,6 @@ class ChatItemWidget extends StatelessWidget {
               ],
             ),
           ),
-          const Icon(
-            Icons.more_vert,
-            color: Colors.white,
-            size: 24,
-          )
         ],
       ),
     );

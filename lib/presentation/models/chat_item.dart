@@ -15,8 +15,8 @@ class ChatItem {
     Map<String, dynamic> data = snapshot.data()! as Map<String, dynamic>;
     return ChatItem(
         profileImage: data['profileImage'],
-        time: data['time'],
-        message: data['message']
+        time: data['time'].toString().contains('-1') ? 'Вас Лайкнуло ' + data['message'] : data['time'],
+        message: data['time'].toString().contains('-1') ? '' : data['message']
     );
   }
 }

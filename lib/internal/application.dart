@@ -10,15 +10,19 @@ class Application extends StatelessWidget {
     return MaterialApp(
       title: 'Dating Demo App v0',
       theme: ThemeData(
-        primarySwatch: Colors.blue,
+        //primarySwatch: Colors.blue,
         visualDensity: VisualDensity.adaptivePlatformDensity,
-        primaryColor: Colors.white70,
+        //primaryColor: Colors.white70,
+        appBarTheme: const AppBarTheme(
+          //backgroundColor: Colors.white70,
+          elevation: 0,
+        )
       ),
-      initialRoute: '/chats',
-      routes: {
-        '/chats': (context) => const ChatsScreen(),
-      },
-      home: const Home(),
+      // initialRoute: '/chats',
+      // routes: {
+      //   '/chats': (context) => const ChatsScreen(),
+      // },
+      home: const ChatsScreen(),
     );
   }
 }
